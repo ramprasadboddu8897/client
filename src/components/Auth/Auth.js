@@ -16,9 +16,8 @@ const initialState = { firstName: '', lastName: '', email: '', password: '', con
 const SignUp = () => {
   const [form, setForm] = useState(initialState);
   const [isSignup, setIsSignup] = useState(false);
-  const [googleErrorAlert, setGoogleErrorAlert] = useState(false); // New state variable
   const dispatch = useDispatch();
-  const nav = useNavigate();
+  const history = useNavigate();
   const classes = useStyles();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -34,56 +33,32 @@ const SignUp = () => {
     e.preventDefault();
 
     if (isSignup) {
-      //dispatch(signup(form)); // While Directly Dispatching the Data Causing Error So Used Below Way
-      handleSignUp(form);
+      dispatch(signup(form, history));
     } else {
-      //dispatch(signin(form));
-      handleSignIn(form);
-    }
-  };
-  const handleSignIn = async (formData) => {
-    try {
-      const data = await dispatch(signin(formData));
-      // Handle successful sign-in here, e.g., set user data in state, navigate to another page
-      nav('/');
-    } catch (error) {
-      // Handle sign-in error here, e.g., show an error message to the user
-      console.log(error);
-    }
-  };
-
-  const handleSignUp = async (formData) => {
-    try {
-      const data = await dispatch(signup(formData));
-      // Handle successful sign-up here, e.g., set user data in state, navigate to another page
-      nav('/');
-    } catch (error) {
-      // Handle sign-up error here, e.g., show an error message to the user
-      console.log(error);
+      dispatch(signin(form, history));
     }
   };
 
   const googleSuccess = async (res) => {
     const result = res?.profileObj;
     const token = res?.tokenId;
+
     try {
       dispatch({ type: AUTH, data: { result, token } });
 
-      nav('/');
+      history('/');
     } catch (error) {
       console.log(error);
     }
   };
 
-  const googleError = () => {
-    setGoogleErrorAlert(true); // Set the state variable to true to trigger the alert
-  };
+  const googleError = () => console.log('Google Sign In was unsuccessful. Try again later');
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   return (
     <Container component="main" maxWidth="xs">
-      <Paper className={classes.paper} elevation={3}>
+      <Paper className={classes.paper} elevation={6}>
         <Avatar className={classes.avatar}>
           <LockOutlinedIcon />
         </Avatar>
@@ -103,17 +78,18 @@ const SignUp = () => {
           <Button type="submit" fullWidth variant="contained" color="primary" className={classes.submit}>
             { isSignup ? 'Sign Up' : 'Sign In' }
           </Button>
-          <GoogleLogin clientId="994060170320-ddkbu7gg9qk2ciome3hqrr020e2sv9ll.apps.googleusercontent.com"
-        render={(renderProps) => (
-          <Button className={classes.googleButton} color="primary" fullWidth onClick={renderProps.onClick} disabled={renderProps.disabled} startIcon={<Icon />} variant="contained">
-            Google Sign In
-          </Button>
-        )}
-        onSuccess={()=>googleSuccess()}
-        onFailure={()=>googleError()}
-        cookiePolicy="single_host_origin"/>
-      {/* {googleErrorAlert && <p>Google Sign In was unsuccessful. Try again later</p>} Display the error alert conditionally */}
-          <Grid container justify="center">
+          <GoogleLogin
+            clientId="564033717568-bu2nr1l9h31bhk9bff4pqbenvvoju3oq.apps.googleusercontent.com"
+            render={(renderProps) => (
+              <Button className={classes.googleButton} color="primary" fullWidth onClick={renderProps.onClick} disabled={renderProps.disabled} startIcon={<Icon />} variant="contained">
+                Google Sign In
+              </Button>
+            )}
+            onSuccess={googleSuccess}
+            onFailure={googleError}
+            cookiePolicy="single_host_origin"
+          />
+          <Grid container justifyContent="flex-end">
             <Grid item>
               <Button onClick={switchMode}>
                 { isSignup ? 'Already have an account? Sign in' : "Don't have an account? Sign Up" }

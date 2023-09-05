@@ -17,7 +17,7 @@ const SignUp = () => {
   const [form, setForm] = useState(initialState);
   const [isSignup, setIsSignup] = useState(false);
   const dispatch = useDispatch();
-  const history = useNavigate();
+  const nav = useNavigate();
   const classes = useStyles();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -29,13 +29,15 @@ const SignUp = () => {
     setShowPassword(false);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
 
     if (isSignup) {
-      dispatch(signup(form, history));
+      await dispatch(signup(form));
+      nav('/');
     } else {
-      dispatch(signin(form, history));
+      await dispatch(signin(form));
+      nav('/');
     }
   };
 
@@ -46,7 +48,7 @@ const SignUp = () => {
     try {
       dispatch({ type: AUTH, data: { result, token } });
 
-      history('/');
+      nav('/');
     } catch (error) {
       console.log(error);
     }
@@ -63,7 +65,7 @@ const SignUp = () => {
           <LockOutlinedIcon />
         </Avatar>
         <Typography component="h1" variant="h5">{ isSignup ? 'Sign up' : 'Sign in' }</Typography>
-        <form className={classes.form} onSubmit={handleSubmit}>
+        <form className={classes.form} onSubmit={handleSubmit} autoComplete='off'>
           <Grid container spacing={2}>
             { isSignup && (
             <>

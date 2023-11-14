@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { Avatar, Button, Paper, Grid, Typography, Container } from '@material-ui/core';
+import { Avatar, Button, Paper, Grid, Typography, Container,CircularProgress} from '@material-ui/core';
+
 import { useNavigate } from 'react-router-dom';
 import { GoogleLogin } from 'react-google-login';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
@@ -16,6 +17,7 @@ const initialState = { firstName: '', lastName: '', email: '', password: '', con
 const SignUp = () => {
   const [form, setForm] = useState(initialState);
   const [isSignup, setIsSignup] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
   const nav = useNavigate();
   const classes = useStyles();
@@ -32,12 +34,21 @@ const SignUp = () => {
   const handleSubmit = async(e) => {
     e.preventDefault();
 
-    if (isSignup) {
-      await dispatch(signup(form));
+    setIsLoading(true); // Start displaying the loader
+
+    try {
+      if (isSignup) {
+        await dispatch(signup(form));
+
+      } else {
+        await dispatch(signin(form));
+      }
+
       nav('/');
-    } else {
-      await dispatch(signin(form));
-      nav('/');
+    } catch (error) {
+      console.error('Login failed:', error);
+    } finally {
+      setIsLoading(false); // Stop displaying the loader
     }
   };
 
@@ -65,40 +76,44 @@ const SignUp = () => {
           <LockOutlinedIcon />
         </Avatar>
         <Typography component="h1" variant="h5">{ isSignup ? 'Sign up' : 'Sign in' }</Typography>
-        <form className={classes.form} onSubmit={handleSubmit} autoComplete='off'>
-          <Grid container spacing={2}>
-            { isSignup && (
-            <>
-              <Input name="firstName" label="First Name" handleChange={handleChange} autoFocus half />
-              <Input name="lastName" label="Last Name" handleChange={handleChange} half />
-            </>
-            )}
-            <Input name="email" label="Email Address" handleChange={handleChange} type="email" />
-            <Input name="password" label="Password" handleChange={handleChange} type={showPassword ? 'text' : 'password'} handleShowPassword={handleShowPassword} />
-            { isSignup && <Input name="confirmPassword" label="Repeat Password" handleChange={handleChange} type="password" /> }
-          </Grid>
-          <Button type="submit" fullWidth variant="contained" color="primary" className={classes.submit}>
-            { isSignup ? 'Sign Up' : 'Sign In' }
-          </Button>
-          <GoogleLogin
-            clientId="564033717568-bu2nr1l9h31bhk9bff4pqbenvvoju3oq.apps.googleusercontent.com"
-            render={(renderProps) => (
-              <Button className={classes.googleButton} color="primary" fullWidth onClick={renderProps.onClick} disabled={renderProps.disabled} startIcon={<Icon />} variant="contained">
-                Google Sign In
-              </Button>
-            )}
-            onSuccess={googleSuccess}
-            onFailure={googleError}
-            cookiePolicy="single_host_origin"
-          />
-          <Grid container justifyContent="flex-end">
-            <Grid item>
-              <Button onClick={switchMode}>
-                { isSignup ? 'Already have an account? Sign in' : "Don't have an account? Sign Up" }
-              </Button>
+        {isLoading ? (
+          <CircularProgress size={24} thickness={4} /> // Adjust the loader appearance
+          ) : (
+          <form className={classes.form} onSubmit={handleSubmit} autoComplete='off'>
+            <Grid container spacing={2}>
+              { isSignup && (
+              <>
+                <Input name="firstName" label="First Name" handleChange={handleChange} autoFocus half />
+                <Input name="lastName" label="Last Name" handleChange={handleChange} half />
+              </>
+              )}
+              <Input name="email" label="Email Address" handleChange={handleChange} type="email" />
+              <Input name="password" label="Password" handleChange={handleChange} type={showPassword ? 'text' : 'password'} handleShowPassword={handleShowPassword} />
+              { isSignup && <Input name="confirmPassword" label="Repeat Password" handleChange={handleChange} type="password" /> }
             </Grid>
-          </Grid>
-        </form>
+            <Button type="submit" fullWidth variant="contained" color="primary" className={classes.submit}>
+              { isSignup ? 'Sign Up' : 'Sign In' }
+            </Button>
+            <GoogleLogin
+              clientId="564033717568-bu2nr1l9h31bhk9bff4pqbenvvoju3oq.apps.googleusercontent.com"
+              render={(renderProps) => (
+                <Button className={classes.googleButton} color="primary" fullWidth onClick={renderProps.onClick} disabled={renderProps.disabled} startIcon={<Icon />} variant="contained">
+                  Google Sign In
+                </Button>
+              )}
+              onSuccess={googleSuccess}
+              onFailure={googleError}
+              cookiePolicy="single_host_origin"
+            />
+            <Grid container justifyContent="flex-end">
+              <Grid item>
+                <Button onClick={switchMode}>
+                  { isSignup ? 'Already have an account? Sign in' : "Don't have an account? Sign Up" }
+                </Button>
+              </Grid>
+            </Grid>
+          </form>
+          )}
       </Paper>
     </Container>
   );
